@@ -1,0 +1,9 @@
+docker build -t canteen-menu .
+
+docker run -p 8080:8080 canteen-menu
+
+docker pull mysql
+
+docker run -d --name mysql-container -e MYSQL_ROOT_PASSWORD=my-secret-pw -e MYSQL_DATABASE=canteen-menu -e MYSQL_USER=kursUser -e MYSQL_PASSWORD=kursPswd -p 3307:3306 mysql
+
+mysql -u root -p

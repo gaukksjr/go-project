@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Registration</title>
+</head>
+<body>
+    <h2>User Registration</h2>
+    <form id="registerForm" action="/register" method="POST">
+        <label for="username">Username:</label><br>
+        <input type="text" id="username" name="username" required><br>
+        
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" name="password" required><br>
+        
+        <label for="role">Role:</label><br>
+        <select id="role" name="role" required>
+            <option value="customer">Customer</option>
+            <option value="manager">Manager</option>
+        </select><br><br>
+        
+        <button type="submit">Register</button>
+    </form>
+
+    <script>
+        document.getElementById("registerForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            var username = document.getElementById("username").value;
+            var password = document.getElementById("password").value;
+            var role = document.getElementById("role").value;
+
+            var data = {
+                "username": username,
+                "password": password,
+                "role": role
+            };
+
+            fetch("http://localhost:8080/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                console.log(response)
+                if (!response.ok) {
+                    throw new Error("Failed to register. Server returned status: " + response.status);
+                } else {
+                    console.log("Registration successful. Server response:", data);
+                    alert("Registration successful! You can now login.");
+                    window.location.href = "/login-page";
+                }
+                return response;
+            })
+            .catch(error => {
+                console.error("Registration failed:", error);
+                alert("Failed to register. Please try again.");
+            });
+
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu</title>
+    <style>
+    </style>
+</head>
+<body>
+    <h1>Menu</h1>
+    <div id="menu-items"></div>
+    <div id="basket">
+        <h2>Basket</h2>
+        <ul id="basket-items"></ul>
+        <p>Total Price: <span id="total-price">0.00</span></p>
+        <button id="order-btn">Order</button>
+    </div>
+
+    <button onclick="returnHome()">Return Home</button>
+
+    <button onclick="switchToOrderPage()">Order Page</button>
+
+    <script>
+        function renderMenu(menuItems) {
+    var menuContainer = document.getElementById("menu-items");
+    menuContainer.innerHTML = "";
+
+    menuItems.forEach(function (item) {
+        var itemContainer = document.createElement("div");
+        itemContainer.innerHTML = `
+            <p>${item.name} - $${item.price}</p>
+            <input type="number" id="quantity-${item.id}" value="1" min="1">
+            <button onclick="addToBasket(${item.id}, '${item.name}', ${item.price})">Add to Basket</button>
+        `;
+        menuContainer.appendChild(itemContainer);
+    });
+}
+
+function addToBasket(id, name, price) {
+    var quantity = parseInt(document.getElementById(`quantity-${id}`).value);
+    var totalPrice = parseFloat(document.getElementById("total-price").textContent);
+    var itemTotal = price * quantity;
+    totalPrice += itemTotal;
+
+    var basketItems = document.getElementById("basket-items");
+    var itemHTML = `<li data-item-id="${id}">${name} - Quantity: ${quantity} - $${itemTotal.toFixed(2)}</li>`;
+    basketItems.innerHTML += itemHTML;
+
+    document.getElementById("total-price").textContent = totalPrice.toFixed(2);
+}
+
+document.getElementById("order-btn").addEventListener("click", function() {
+    var basketItems = document.getElementById("basket-items").getElementsByTagName("li");
+    var orderData = [];
+
+    for (var i = 0; i < basketItems.length; i++) {
+        var itemId = basketItems[i].dataset.itemId;
+        var itemText = basketItems[i].textContent;
+        var itemData = itemText.split(" - ");
+        var itemName = itemData[0];
+        var itemQuantity = parseInt(itemData[1].split(": ")[1]);
+        var itemTotalPrice = parseFloat(itemData[2].split("$")[1]);
+
+        orderData.push({
+            item_id: parseInt(itemId),
+            quantity: itemQuantity,
+            total_price: itemTotalPrice
+        });
+    }
+
+    fetch('/save-order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(orderData)
+    })
+    .then(response => {
+        if (response.ok) {
+            document.getElementById("basket-items").innerHTML = "";
+            document.getElementById("total-price").textContent = "0.00";
+        } else {
+            console.error('Failed to place order:', response.statusText);
+        }
+    })
+    .catch(error => console.error('Error placing order:', error));
+});
+
+fetch('/menu')
+    .then(response => response.json())
+    .then(data => renderMenu(data))
+    .catch(error => console.error('Error fetching menu items:', error));
+
+    function returnHome() {
+            window.location.href = "/home-page";
+        }
+
+    function switchToOrderPage() {
+            window.location.href = "/order-page";
+        }
+
+
+    </script>
+</body>
+</html>

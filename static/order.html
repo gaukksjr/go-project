@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders</title>
+</head>
+<body>
+    <h1>Orders</h1>
+    <div id="orders-container"></div>
+
+    <button onclick="logout()">Logout</button>
+
+    <script>
+        function fetchOrders() {
+            fetch('/get-order')
+                .then(response => response.json())
+                .then(data => {
+                    // Filter orders by status and user_id
+                    const readyOrders = data.filter(order => order.status === 'ready');
+                    const processingOrders = data.filter(order => order.status === 'processing');
+
+                    
+                    displayOrders(readyOrders, 'Ready Orders');
+    
+                    // Display processing orders
+                    displayOrders(processingOrders, 'Processing Orders');
+                })
+                .catch(error => console.error('Error fetching orders:', error));
+        }
+    
+        function displayOrders(orders, title) {
+            const ordersContainer = document.getElementById('orders-container');
+            const titleElement = document.createElement('h2');
+            titleElement.textContent = title;
+            ordersContainer.appendChild(titleElement);
+    
+            const ordersList = document.createElement('ul');
+            orders.forEach(order => {
+                // Define the user ID
+                const userId = order.user_id;
+    
+                // Prepare the request data
+                const requestData = {
+                    user_id: userId
+                };
+    
+                // Configure the fetch options
+                const fetchOptions = {
+                    method: 'POST', // Use POST method
+                    headers: {
+                        'Content-Type': 'application/json' // Specify JSON content type
+                    },
+                    body: JSON.stringify(requestData) // Convert the request data to JSON string
+                };
+    
+                // Send the request to get the username
+                fetch('/get-username', fetchOptions)
+                    .then(response => response.json())
+                    .then(data => {
+                        const username = data.username;
+    
+                        // Create list item to display order details with username
+                        const orderItem = document.createElement('li');
+                        orderItem.textContent = `Username: ${username}, Item ID: ${order.item_id}, Quantity: ${order.quantity}, Total Price: $${order.total_price}, Status: ${order.status}, Order Time: ${order.order_time}`;
+    
+                        // Add button to change status for processing orders
+                        if (order.status === 'processing') {
+                            const changeStatusButton = document.createElement('button');
+                            changeStatusButton.textContent = 'Change Status to Ready';
+                            changeStatusButton.addEventListener('click', () => changeOrderStatus(order.order_time)); // Pass order_time instead of order.id
+                            orderItem.appendChild(changeStatusButton);
+                        }
+    
+                        ordersList.appendChild(orderItem);
+                    })
+                    .catch(error => console.error('Error fetching username:', error));
+            });
+    
+            ordersContainer.appendChild(ordersList);
+        }
+    
+        function changeOrderStatus(orderTime) { // Change parameter to orderTime
+            // Prepare the request data
+            const requestData = {
+                order_time: orderTime // Use orderTime as the key
+            };
+    
+            // Configure the fetch options
+            const fetchOptions = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            };
+    
+            fetch('/update-order', fetchOptions)
+                .then(response => {
+                    if (response.ok) {
+                        // Reload the page after successfully updating the order status
+                        window.location.reload();
+                    } else {
+                        console.error('Failed to change order status:', response.statusText);
+                    }
+                })
+                .catch(error => console.error('Error changing order status:', error));
+        }
+    
+        function logout() {
+            // Redirect to logout endpoint or perform logout actions
+            window.location.href = '/logout';
+        }
+    
+        // Fetch orders when the page loads
+        fetchOrders();
+    </script>
+</body>
+</html>

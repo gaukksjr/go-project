@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  canteen-menu:
+    build:
+      context: .
+      dockerfile: dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql-db
+    environment:
+      MYSQL_CONNECTION_STRING: "kursUser:kursPswd@tcp(mysql-db:3306)/canteen-menu"
+    networks:
+      - canteen-network
+
+  mysql-db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: my-secret-pw
+      MYSQL_DATABASE: canteen-menu
+      MYSQL_USER: kursUser
+      MYSQL_PASSWORD: kursPswd
+    ports:
+      - "3307:3306"
+    networks:
+      - canteen-network
+
+networks:
+  canteen-network:
+    driver: bridge
